@@ -1,5 +1,9 @@
 name: MSBuild
 
+permissions:
+  contents: read
+  pull-requests: write
+
 on:
   push:
     branches: [ master ]
@@ -19,6 +23,11 @@ jobs:
         PLATFORM:
           - {
               OS: windows-2022,
+              SOLUTION_FILE_PATH: projects\premake\hfsm2-vs-2022.sln,
+              PROJECT_FILE_NAME: test-17
+            }
+          - {
+              OS: windows-11-arm,
               SOLUTION_FILE_PATH: projects\premake\hfsm2-vs-2022.sln,
               PROJECT_FILE_NAME: test-17
             }
