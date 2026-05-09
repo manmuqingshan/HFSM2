@@ -1,62 +1,9 @@
+#if HFSM2_PLANS_AVAILABLE()
+
 namespace hfsm2 {
 namespace detail {
 
 ////////////////////////////////////////////////////////////////////////////////
-
-struct TaskStatus final {
-	enum Result {
-		NONE,
-		SUCCESS,
-		FAILURE
-	};
-
-	Result result = Result::NONE;
-	bool outerTransition = false;
-
-	HFSM2_CONSTEXPR(11)	TaskStatus(const Result result_ = Result::NONE,
-								   const bool outerTransition_ = false)	noexcept;
-
-	HFSM2_CONSTEXPR(11)	explicit operator bool()				  const noexcept;
-
-	HFSM2_CONSTEXPR(14)	void clear()									noexcept;
-};
-
-//------------------------------------------------------------------------------
-
-HFSM2_CONSTEXPR(14) TaskStatus  operator |  (TaskStatus& l, const TaskStatus r)	noexcept;
-HFSM2_CONSTEXPR(14) TaskStatus& operator |= (TaskStatus& l, const TaskStatus r)	noexcept;
-
-////////////////////////////////////////////////////////////////////////////////
-
-#if HFSM2_PLANS_AVAILABLE()
-
-struct TaskLink final {
-	Long prev		= INVALID_LONG;
-	Long next		= INVALID_LONG;
-};
-
-//------------------------------------------------------------------------------
-
-struct Bounds final {
-	Long first		= INVALID_LONG;
-	Long last		= INVALID_LONG;
-};
-
-////////////////////////////////////////////////////////////////////////////////
-
-template <
-	typename
-  , typename
-  , typename
-  , Long
-  , Long
-  , Long
-  , typename
-  HFSM2_IF_SERIALIZATION(, Long)
-  , Long
-  , typename
->
-struct ArgsT;
 
 template <typename>
 struct PlanDataT;
@@ -98,20 +45,18 @@ struct PlanDataT<
 	static constexpr Long REGION_COUNT	= RegionList::SIZE;
 	static constexpr Long TASK_CAPACITY	= NTaskCapacity;
 
-	using Task				= TaskT		  <Payload>;
-	using Tasks				= TaskListT   <Payload , TASK_CAPACITY>;
-	using TaskLinks			= StaticArrayT<TaskLink, TASK_CAPACITY>;
+	using Task				= TaskT<Payload>;
+	using Tasks				= TaskListT<Task, TASK_CAPACITY, REGION_COUNT>;
+	using TaskIndex			= typename Tasks::Index;
+	using Bounds			= typename Tasks::Bounds;
 
-	using TasksBounds		= StaticArrayT<Bounds    , REGION_COUNT>;
 	using TasksBits			= BitFlatSetT <	            STATE_COUNT>;
 	using RegionBits		= BitFlatSetT <	           REGION_COUNT>;
 	using RegionStatuses	= StaticArrayT<TaskStatus, REGION_COUNT>;
 
 	Tasks tasks;
-	TaskLinks taskLinks;
 	TasksBits payloadExists;
 
-	TasksBounds taskBounds;
 	TasksBits tasksSuccesses;
 	TasksBits tasksFailures;
 	RegionBits planExists;
@@ -126,7 +71,7 @@ struct PlanDataT<
 
 #if HFSM2_ASSERT_AVAILABLE()
 	HFSM2_CONSTEXPR(14)	void verifyPlans()							  const noexcept;
-	HFSM2_CONSTEXPR(14)	Long verifyPlan(const RegionID stateId)		  const noexcept;
+	HFSM2_CONSTEXPR(14)	TaskIndex verifyPlan(const RegionID regionId) const noexcept;
 #endif
 };
 
@@ -165,19 +110,17 @@ struct PlanDataT<
 	static constexpr Long REGION_COUNT	= RegionList::SIZE;
 	static constexpr Long TASK_CAPACITY	= NTaskCapacity;
 
-	using Task				= TaskT		  <void>;
-	using Tasks				= TaskListT	  <void    , TASK_CAPACITY>;
-	using TaskLinks			= StaticArrayT<TaskLink, TASK_CAPACITY>;
+	using Task				= TaskT<void>;
+	using Tasks				= TaskListT<Task, TASK_CAPACITY, REGION_COUNT>;
+	using TaskIndex			= typename Tasks::Index;
+	using Bounds			= typename Tasks::Bounds;
 
-	using TasksBounds		= StaticArrayT<Bounds    , REGION_COUNT>;
 	using TasksBits			= BitFlatSetT <	            STATE_COUNT>;
 	using RegionBits		= BitFlatSetT <	           REGION_COUNT>;
 	using RegionStatuses	= StaticArrayT<TaskStatus, REGION_COUNT>;
 
 	Tasks tasks;
-	TaskLinks taskLinks;
 
-	TasksBounds taskBounds;
 	TasksBits tasksSuccesses;
 	TasksBits tasksFailures;
 	RegionBits planExists;
@@ -192,7 +135,7 @@ struct PlanDataT<
 
 #if HFSM2_ASSERT_AVAILABLE()
 	HFSM2_CONSTEXPR(14)	void verifyPlans()							  const noexcept;
-	HFSM2_CONSTEXPR(14)	Long verifyPlan(const RegionID stateId)		  const noexcept;
+	HFSM2_CONSTEXPR(14)	TaskIndex verifyPlan(const RegionID regionId) const noexcept;
 #endif
 };
 
@@ -271,11 +214,11 @@ struct PlanDataT<
 #endif
 };
 
-#endif
-
 ////////////////////////////////////////////////////////////////////////////////
 
 }
 }
+
+#endif
 
 #include "plan_data.inl"
